@@ -59,6 +59,7 @@ header("Content-Length: $new_length");
 header("Content-Range: bytes $range-$range_end/$size");
 } else {
 $new_length=$size;
+  
 header("Content-Length: ".$size);
 }
 $chunksize = 1*(1024*1024);
