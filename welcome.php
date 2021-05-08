@@ -1,11 +1,13 @@
 <?php
 	session_start();
-	error_reporting(0);	
+	// error_reporting(0);	
 
-	//connect to database
-	$con = mysqli_connect('localhost','root','','uploaddb') or die(mysqli_error($con));
+	require __DIR__."/lib/Library.php";
+    require "helper.php";
+    
+    $app = new Library();
 
-	if (!(isset($_SESSION['username']))) {
+	if (!(isset($_SESSION['id']))) {
 		header('Location:index.php?error=nologin');
 	}
 
@@ -17,23 +19,9 @@
 		$msg = 'File successfully deleted';
 	}
 
-
-	if (isset($_POST['username'], $_POST['password'])) {
-		$username = stripcslashes($_POST['username']);
-		$password = mysqli_real_escape_string($con, $_POST['password']);
-
-		$query = "SELECT username, password FROM users WHERE username='$username' AND password='$password'";
-		$res = mysqli_query($con, $query);
-
-		if (mysqli_num_rows($res) == 1) {
-			while ($check = mysqli_fetch_array($res)) {
-				echo "success";
-			}
-		}
-		else{
-			echo "<p>Username or password is incorrect</p>";
-		}
-	}
+	$user = "SELECT * FROM users WHERE id='$_SESSION[id]'";
+	$user = $app->connection->query($user);
+	$user = $user->fetch(1);
 ?>
 
 <!DOCTYPE html>
@@ -52,18 +40,35 @@
 <body>
 		<?php
 
-		$pictures = $_FILES['pictures'];
-		$descript = $_POST['descript'];
-		if (!($pictures['error'])) {
-			$picturename = $pictures['name'];
-			$temp = $pictures['tmp_name'];
+		if (!empty($_POST['upload'])) {
+			$file = $_FILES['file'];
+			$name = input($_POST['name']);
+			
+			
+			if (!($file['error']) && !empty($name)) {
+				$fileName = $file['name'];
+				$fileExt = explode('.',$fileName)[1];
+				$fileSize = $file['size'];
+				$fileTmp = $file['tmp_name'];
+				$fileNewName = uniqid().'.'.$fileExt;
+				
+				if($fileSize > 500000) {
+					alert("File size too large");
+					header('Location :'. $_SESSION['HTTP_REFERER']);
+				}
+	
+				$statement = "INSERT INTO upload (name, file, userid) VALUES('$name', '$fileNewName', '$_SESSION[id]')";
 
-			if ($_POST['uploadfile'] != "") {
-				move_uploaded_file($temp, "docc/".$picturename);
-				$insert = mysqli_query($con, "INSERT INTO upload(name,descript) VALUES ('$picturename','$descript')");
-				$success = "File upload successful";
+				try {
+					$app->connection->exec($statement);
+					move_uploaded_file($fileTmp, "uploads/".$fileName);
+					alert("File upload successful");
+				} catch (\PDOException $e) {
+					exit($e->getMessage());
+				}
 			}
 		}
+	
 		?>
 
 
@@ -81,44 +86,30 @@
 			<div class="container">
 			<div class="fm row">
 				<div class="col-8">
-					
-				<div class="alert alert-light">
-					<?php
-						//it output the message delete message and return to default page
-						$getUrl = $_SERVER['REQUEST_URI'];
-						echo '<strong>'.$msg.'</strong>';
-						if(strpos($getUrl,'?') != false){
-							header('Refresh: 2; URL=welcome.php');
-						}
-					?>
-				</div>
-
 					<table class="table table-striped">
 						<thead>
 							<tr>	
 								<th>S/N</th>
 								<th>File Name</th>
-								<th>Description</th>
-								<th>File</th>
+								<th>Access</th>
 								<th>Delete</th>
 							</tr>
 						</thead>
 						<tbody>
 							
 								<?php
-
-									$select = mysqli_query($con,"SELECT * FROM upload ORDER BY id DESC");
-									while($row=mysqli_fetch_array($select)){
+									$statement = "SELECT * FROM upload WHERE userid='$_SESSION[id]' ORDER BY id ASC";
+									$statement = $app->connection->query($statement);
+									foreach ($rows = $statement->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+										
 										$name = $row['name'];
 										$id = $row['id'];
 										$filename = $row['file'];
-										$type = $row['type'];
 				
 										echo"<tr>
 										<td>$row[id]</td>
 										<td>$row[name]</td>
-										<td>$row[descript]</td>
-										<td><a href='download.php?filename=".$name."'>$row[name]</a></td>
+										<td>$row[access_level]</td>
 										<td><a href='#' data-toggle='modal' data-target='#confirm-delete$row[id]'>Delete</a></td>
 										<tr>
 										
@@ -146,19 +137,15 @@
 					
 				</div>
 				<div class="fm col-4">
-					<h2>Welcome <?php echo $_SESSION['username']; ?></h2>
+					<h2>Welcome <?php echo $user['username']; ?></h2>
 					<p>you can now upload your file</p>
 				</div>
 				<form method="post" action="" enctype="multipart/form-data">
-						<input type="file" name="pictures" id="pictures">
-						<input type="text" name="descript" id="descript" placeholder="Description">
-						<input type="submit" name="uploadfile" id="uploadfile" value="upload file">
-						
-					</form>
+					<input type="file" name="file" id="file">
+					<input type="text" name="name" id="name" placeholder="File Name" required>
+					<input type="submit" name="upload" value="upload file">	
+				</form>
 					
-			</div>
-			<h5 style="margin-top: 20px"><?php echo $success ;?></h5>
-			</div>
 		</div>
 
 
