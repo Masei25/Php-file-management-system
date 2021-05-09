@@ -48,11 +48,12 @@ class Library
         
         try {
             $statement = $this->connection->prepare($statement);
+            
             $statement->exec([
-                'firstname' => $input['firstname'],
-                'lastname' => $input['lastname'],
-                'username' => $input['username'],
-                'passwprd' => $input['password']
+                'firstname' => $firstname['firstname'],
+                'lastname' => $lastname['lastname'],
+                'username' => $username['username'],
+                'passwprd' => $password['password']
             ]);
             return $statement;
         } catch (\PDOException $e) {
