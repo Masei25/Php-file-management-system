@@ -34,7 +34,7 @@
 
 		$app->register($firstname,$lastname,$username,$password);
 		alert("Registration Successful, login to continue");
-		header('Location:index.php');
+		// header('Location:index.php');
 	};
 
 ?>

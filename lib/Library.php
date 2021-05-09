@@ -47,14 +47,14 @@ class Library
                         VALUES (:firstname,:lastname,:username,:password)";
         
         try {
-            $statement = $this->connection->prepare($statement);
             
-            $statement->exec([
+            $statement = $this->connection->exec([
                 'firstname' => $firstname['firstname'],
                 'lastname' => $lastname['lastname'],
                 'username' => $username['username'],
                 'passwprd' => $password['password']
             ]);
+            dd($statement);
             return $statement;
         } catch (\PDOException $e) {
             exit($e->getMessage());
