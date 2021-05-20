@@ -1,7 +1,6 @@
 <?php
 	session_start();
 	// error_reporting(0);	
-
 	require __DIR__."/lib/Library.php";
     require "helper.php";
     
@@ -12,12 +11,12 @@
 	}
 
 	//to file delete
-	if(isset($_GET['id'])){
-		$id = $_GET['id'];
-		$query = "DELETE FROM upload WHERE id = $id"; 
-		$result = $app->connection->query($query);
-		$msg = 'File successfully deleted';
-	}
+	// if(isset($_GET['id'])){
+	// 	$id = $_GET['id'];
+	// 	$query = "DELETE FROM upload WHERE id = $id"; 
+	// 	$result = $app->connection->query($query);
+	// 	$msg = 'File successfully deleted';
+	// }
 
 	$user = "SELECT * FROM users WHERE id='$_SESSION[id]'";
 	$user = $app->connection->query($user);
@@ -39,13 +38,22 @@
 </head>
 <body>
 		<?php
-
-		if (!empty($_POST['upload'])) {
+		
+	
+		if (!empty($_POST['upload']) && !empty($_FILES['file'])) {
 			$file = $_FILES['file'];
 			$name = input($_POST['name']);
+			$access = $_POST['access'];	
+
+			if (empty($name)) {
+				aredirect("File name is empty...", "welcome.php");
+			}
 			
-			
-			if (!($file['error']) && !empty($name)) {
+			if (empty($access)) {
+				aredirect("Please select an access type...", "welcome.php");
+			}
+
+			if (!($file['error']) && !empty($name) && !empty($access)) {
 				$fileName = $file['name'];
 				$fileExt = explode('.',$fileName)[1];
 				$fileSize = $file['size'];
@@ -53,11 +61,11 @@
 				$fileNewName = uniqid().'.'.$fileExt;
 				
 				if($fileSize > 500000) {
-					alert("File size too large");
-					header('Location :'. $_SESSION['HTTP_REFERER']);
+					aredirect("File too large", "welcome.php");
+					exit();
 				}
 	
-				$statement = "INSERT INTO upload (name, file, userid) VALUES('$name', '$fileNewName', '$_SESSION[id]')";
+				$statement = "INSERT INTO uploads (userid,name, file, access_level) VALUES('$_SESSION[id]', '$name', '$fileNewName', $access)";
 
 				try {
 					$app->connection->exec($statement);
@@ -98,18 +106,24 @@
 						<tbody>
 							
 								<?php
-									$statement = "SELECT * FROM upload WHERE userid='$_SESSION[id]' ORDER BY id ASC";
+									$statement = "SELECT * FROM uploads WHERE userid='$_SESSION[id]' ORDER BY id ASC";
 									$statement = $app->connection->query($statement);
 									foreach ($rows = $statement->fetchAll(\PDO::FETCH_ASSOC) as $row) {
 										
 										$name = $row['name'];
 										$id = $row['id'];
 										$filename = $row['file'];
+										$access = $row['access_level'];
+										if($access == '2') {
+											$access = 'Private';
+										}else {
+											$access = 'Public';
+										}
 				
 										echo"<tr>
 										<td>$row[id]</td>
 										<td>$row[name]</td>
-										<td>$row[access_level]</td>
+										<td>$access</td>
 										<td><a href='#' data-toggle='modal' data-target='#confirm-delete$row[id]'>Delete</a></td>
 										<tr>
 										
@@ -143,6 +157,11 @@
 				<form method="post" action="" enctype="multipart/form-data">
 					<input type="file" name="file" id="file">
 					<input type="text" name="name" id="name" placeholder="File Name" required>
+					<select name="access" id="access">
+						<option value="" disabled selected>Access Type</option>
+						<option value="1">Public</option>
+						<option value="2">Private</option>
+					</select>
 					<input type="submit" name="upload" value="upload file">	
 				</form>
 					

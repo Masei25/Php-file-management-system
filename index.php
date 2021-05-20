@@ -1,5 +1,7 @@
 <?php
-    session_start();
+    if(!isset($_SESSION)) {
+		session_start();
+	}
     // error_reporting(0);
 
     require __DIR__."/lib/Library.php";
@@ -10,11 +12,10 @@
 	$app->Auth('id');
 
     if (!empty($_POST['btnSubmit'])) {
-        $username = input($_POST['userinput']);
-		$email = input($_POST['userinput']);
+		$userinput = trim($_POST['userinput']);
         $password = input($_POST['password']);
 
-        if (empty($username) || empty($email)) {
+        if (empty($userinput)) {
             alert("Username field is required");
             die();
         }
@@ -24,8 +25,8 @@
             die();
         }
 
-        $user_id = $app->login($username, $email, $password);
-            
+        $user_id = $app->login($userinput, $password);
+        dd('out not correct');
         if ($user_id > 0) {
             $_SESSION['id'] = $user_id;
             header("Location: welcome.php");
@@ -75,24 +76,28 @@
 							<tr>
 								<th>S/N</th>
 								<th>File Name</th>
-								<th>Access Level</th>
+								<th>Access Type</th>
 								<th>Action</th>
 							</tr>
 						</thead>
 						<tbody>
 								<?php
-									$statement = "SELECT * FROM uploads ORDER BY id ASC";
+									$statement = "SELECT * FROM uploads WHERE access_level=1 ORDER BY id ASC";
                                     $statement = $app->connection->query($statement);
                                         foreach ($rows = $statement->fetchAll(\PDO::FETCH_ASSOC) as $row) {
 											
 											$id = $row['id'];
 											$name = $row['name'];
                                             $filename = $row['file'];
+											$access = $row['access_level'];
+											if($access == '1') {
+												$access = 'Public';
+											}
                                         
                                             echo"<tr>
 													<td>$row[id]</td>
 													<td>$row[name]</td>
-													<td>$row[descript]</td>
+													<td>$access</td>
 													<td><a href='download.php?filename=".$name."'>$row[name]</a></td>
 												<tr>";
                                         }

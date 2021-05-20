@@ -1,5 +1,4 @@
 <?php
-
 require "Connect.php";
 
 class Library
@@ -12,23 +11,28 @@ class Library
         $this->connection = (new Connect())->getConnect();
     }
 
-    public function login($username, $email, $password)
+    public function login($userinput, $password)
     {
-        $statement = "SELECT * FROM users WHERE username=:username OR email=:email";
+        $statement = "SELECT * FROM users WHERE username=:userinput OR email=:userinput";
 
         try {
             $query = $this->connection->prepare($statement);
-            $query->execute([
-                ':username' => $username,
-                ':email' => $email
-            ]);
-            
+            $query->bindParam(":userinput", $userinput, PDO::PARAM_STR);
+            $query->execute();
+
             $result = $query->fetch(PDO::FETCH_ASSOC);
-            dd($result);
             
-            if($query->rowCount() > 0) {
-                $result = $query->fetch(PDO::FETCH_OBJ);
-                return $result->id;
+            if ($query->rowCount() > 0) {
+                if ($userinput == $result['username'] || $userinput == $result['email']) { 
+                    if (password_verify($password, $result['password'])) {
+                        if(!isset($_SESSION)){
+                            session_start();
+                        }
+                        $_SESSION['id'] = $result['id'];
+                        aredirect("Login successful...", "welcome.php");
+                    }
+                    alert("Incorrect details!!");
+                }
             }
 
         } catch (\PDOExeption $e) {

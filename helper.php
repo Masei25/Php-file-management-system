@@ -13,7 +13,14 @@ function input($data) {
     return $data;
 }
 
-function alert($msg, $url = null) {
+function alert($msg) {
+	echo "<script>
+            alert('$msg');
+            window.location.href='$url';
+        </script>";
+}
+
+function aredirect($msg, $url) {
     $url = explode('/', $url);
     $url = end($url);
 	echo "<script>
