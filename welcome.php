@@ -15,7 +15,7 @@
 	if(isset($_GET['id'])){
 		$id = $_GET['id'];
 		$query = "DELETE FROM upload WHERE id = $id"; 
-		$result = mysqli_query($con, $query);
+		$result = $app->connection->query($query);
 		$msg = 'File successfully deleted';
 	}
 

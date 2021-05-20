@@ -10,20 +10,21 @@
 	$app->Auth('id');
 
     if (!empty($_POST['btnSubmit'])) {
-        $username = input($_POST['username']);
+        $username = input($_POST['userinput']);
+		$email = input($_POST['userinput']);
         $password = input($_POST['password']);
 
-        if ($username == "") {
+        if (empty($username) || empty($email)) {
             alert("Username field is required");
             die();
         }
 
-        if ($password == "") {
+        if (empty($password)) {
             alert("Password field is required");
             die();
         }
 
-        $user_id = $app->login($username, $password);
+        $user_id = $app->login($username, $email, $password);
             
         if ($user_id > 0) {
             $_SESSION['id'] = $user_id;
@@ -105,7 +106,7 @@
 				<div class="fm col-4">
 					<form method="post" action="index.php">
 						<h2>Login your account</h2>
-						<input type="text" class="form-control" name="username" placeholder="user name"><br>
+						<input type="text" class="form-control" name="userinput" placeholder="user name"><br>
 						<input type="password" class="form-control" name="password" placeholder="password"><br>
 						<input class="btn btn-info" type="submit" name="btnSubmit">
 					</form>

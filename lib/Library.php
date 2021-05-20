@@ -12,15 +12,19 @@ class Library
         $this->connection = (new Connect())->getConnect();
     }
 
-    public function login($username, $password)
+    public function login($username, $email, $password)
     {
-        $statement = "SELECT id FROM users WHERE username=:username AND password=:password";
+        $statement = "SELECT * FROM users WHERE username=:username OR email=:email";
 
         try {
             $query = $this->connection->prepare($statement);
-            $query->bindParam("username",$username,PDO::PARAM_STR);
-            $query->bindParam("password",$password,PDO::PARAM_STR);
-            $query->execute();
+            $query->execute([
+                ':username' => $username,
+                ':email' => $email
+            ]);
+            
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            dd($result);
             
             if($query->rowCount() > 0) {
                 $result = $query->fetch(PDO::FETCH_OBJ);
